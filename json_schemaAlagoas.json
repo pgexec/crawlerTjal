@@ -1,0 +1,81 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "numero_processo": {"type": "string"},
+        "classe": {"type": "string"},
+        "assunto": {"type": "string"},
+        "foro": {"type": "string"},
+        "vara": {"type": "string"},
+        "juiz": {"type": "string"},
+        "partes": {
+            "type": "object",
+            "properties": {
+                "autor": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {"nome": {"type": "string"}}, "required": ["nome"]}
+                },
+                "reu": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {"nome": {"type": "string"}}, "required": ["nome"]}
+                },
+                "Testemunha": {
+                    "type": "array",
+                    "items": {"type": "object", "properties": {"nome": {"type": "string"}}, "required": ["nome"]}
+                }
+            },
+            "required": ["autor", "reu", "Testemunha"]
+        },
+        "movimentacoes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"data": {"type": "string", "format": "date"}, "movimento": {"type": "string"}},
+                "required": ["data", "movimento"]
+            }
+        },
+        "peticoes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"data": {"type": "string", "format": "date"}, "tipo": {"type": "string"}},
+                "required": ["data", "tipo"]
+            }
+        },
+        "incidentes": {
+            "type": "array",
+            "items": {"type": "object", "properties": {"incidente": {"type": "string"}}, "required": ["incidente"]}
+        },
+        "Apensos": {
+            "type": "array",
+            "items": {"type": "object", "properties": {"apensos": {"type": "string"}}, "required": ["apensos"]}
+        },
+        "audiencias": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "data": {"type": "string", "format": "date"},
+                    "audiencia": {"type": "string"},
+                    "situacao": {"type": "string"},
+                    "qtPessoas": {"type": "string"}
+                },
+                "required": ["data", "audiencia", "situacao", "qtPessoas"]
+            }
+        }
+    },
+    "required": [
+        "numero_processo",
+        "classe",
+        "assunto",
+        "foro",
+        "vara",
+        "juiz",
+        "partes",
+        "movimentacoes",
+        "peticoes",
+        "incidentes",
+        "Apensos",
+        "audiencias"
+    ]
+}
