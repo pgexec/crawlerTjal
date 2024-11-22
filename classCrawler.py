@@ -1,6 +1,9 @@
+from ast import parse
+
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import parse_qs,urlparse,quote,urlencode,unquote
+from urllib.parse import parse_qs,urlparse,urlencode
+from multidict import MultiDict
 
 
 class Crawler:
@@ -23,6 +26,7 @@ class Crawler:
             "X-Requested-With": "XMLHttpRequest",
         }
 
+
     def obter_cookies_iniciais(self):
         """
         Acessa a página inicial para capturar os cookies necessários.
@@ -34,45 +38,23 @@ class Crawler:
         else:
             print(f"Erro ao capturar cookies: {response.status_code}")
 
-    def extrair_foro(self, numero_processo):
-        """
-        Extrai o foro dos dois últimos dígitos do número do processo.
-        """
-        return numero_processo.split(".")[-1][:2]
-
     def enviar_requisicao(self, numero_processo):
-        """
-        Envia a consulta para o sistema e lida com redirecionamentos.
-        """
-        foro_numero = self.extrair_foro(numero_processo)
 
-        query_params = {
-            "conversationId": "",  # Se vazio funciona
-            "cbPesquisa": "NUMPROC",
-            "numeroDigitoAnoUnificado": numero_processo,
-            "foroNumeroUnificado": foro_numero,
-            "dadosConsulta.valorConsultaNuUnificado": "UNIFICADO",
-            "dadosConsulta.valorConsulta": numero_processo,
-            "dadosConsulta.tipoNuProcesso": "UNIFICADO",
-        }
 
-        # Montar URL de busca
-        url = f"{self.base_url}/cpopg/search.do?{urlencode(query_params)}"
+        url = f"{self.base_url}cpopg/search.do?conversationId=&cbPesquisa=NUMPROC&numeroDigitoAnoUnificado={numero_processo[:15]}&foroNumeroUnificado={numero_processo[-4:]}&dadosConsulta.valorConsultaNuUnificado={numero_processo}&dadosConsulta.valorConsultaNuUnificado=UNIFICADO&dadosConsulta.valorConsulta=&dadosConsulta.tipoNuProcesso=UNIFICADO"
         print(f"URL gerada: {url}")
 
-        # Enviar requisição
-        response = self.session.get(url, headers=self.headers, allow_redirects=True)  # Não segue redirecionamento
+        response = self.session.get(url, headers=self.headers, allow_redirects=False)
         if response.status_code == 302:
 
-            # Capturar o redirecionamento
-            redirect_url = response.headers.get("Location")
+            redirect_url = f"{self.base_url}{response.headers.get("Location")}"
             print(f"Redirecionado para: {redirect_url}")
 
-            # Seguir manualmente o redirecionamento, se necessário
-            response = self.session.get(redirect_url, headers=self.headers)
-            if response.status_code == 200:
+
+
+            if redirect_url:
                 print("Detalhes capturados com sucesso!")
-                return response.content
+                return redirect_url
             else:
                 print(f"Erro ao acessar a URL redirecionada: {response.status_code}")
                 return None
@@ -83,11 +65,8 @@ class Crawler:
             print(f"Erro na requisição: {response.status_code}")
             return None
 
-
     def acessar_detalhes(self, url_processo):
-        """
-        Acessa a página de detalhes do processo e retorna o HTML.
-        """
+
         headers = self.headers.copy()
         headers["Referer"] = url_processo
 

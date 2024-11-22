@@ -10,6 +10,7 @@ class Miner:
         self.site = site
         self.json_schema = json_schema_path
         self.dados_processo = {}
+
         try:
             with open(json_schema_path,"r",encoding="utf-8") as schema_file:
                 self.json_schema = json.load(schema_file)
@@ -132,9 +133,6 @@ class Miner:
             return False
 
     def processar_dados(self, nome_arquivo="dados_TJAL.json"):
-        """
-        Processa os dados do HTML e salva em um arquivo JSON.
-        """
         try:
             self.dados_processo["numero_processo"] = self.extrair_dado("span", "numeroProcesso")
             self.dados_processo["classe"] = self.extrair_dado("span", "classeProcesso")

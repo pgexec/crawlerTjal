@@ -20,7 +20,6 @@ def main():
     print("Acessando detalhes do processo...")
     detalhes_html = crawler.acessar_detalhes(url_processo)
 
-
     if detalhes_html:
         print("Página carregada com sucesso. Processando...")
         miner = Miner(detalhes_html, "json_schemaAlagoas.json")  # Use o schema apropriado
