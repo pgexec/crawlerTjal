@@ -144,7 +144,7 @@ class Miner:
             self.dados_processo["movimentacoes"] = self.extrair_movimentacoes()
             self.dados_processo["peticoes"] = self.extrair_peticoes()
             self.dados_processo["incidentes"] = self.extrair_tabela_simples(4, "incidente")
-            self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apenso")
+            self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apensos")
             self.dados_processo["audiencias"] = self.extrair_audiencias()
 
             # Salvar os dados no arquivo JSON
