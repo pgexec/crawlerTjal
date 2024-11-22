@@ -1,17 +1,27 @@
 import re
+from cgi import print_form
+
 from jsonschema import validate, ValidationError
 import json
 
 class Miner:
-    def __init__(self, site, json_schema):
+    def __init__(self, site, json_schema_path):
 
         self.site = site
-        self.json_schema = json_schema
+        self.json_schema = json_schema_path
         self.dados_processo = {}
+        try:
+            with open(json_schema_path,"r",encoding="utf-8") as schema_file:
+                self.json_schema = json.load(schema_file)
+        except Exception as e:
+            print(f"Erro ao carregar o JSON Schema:{e}")
 
     def extrair_dado(self, elemento, id):
-
         dado = self.site.find(elemento, attrs={"id": id})
+        if not dado:
+            print(f"Elemento {id} não encontrado no HTML.")  # Depuração
+        else:
+            print(f"Elemento {id} encontrado: {dado}")  # Depuração
         return dado.text.strip() if dado else None
 
     def extrair_partes(self):
@@ -73,6 +83,19 @@ class Miner:
             print(f"Erro ao processar {label}: {e}")
         return []
 
+    def salvar_como_json(self, nome_arquivo="dados_processo.json"):
+
+        #Salva os dados processados em um arquivo JSON.
+        try:
+            if self.validar_json():
+                with open(nome_arquivo, "w", encoding="utf-8") as arquivo:
+                    json.dump(self.dados_processo, arquivo, indent=4, ensure_ascii=False)
+                print(f"Dados salvos com sucesso no arquivo {nome_arquivo}.")
+            else:
+                print("Erro: Dados inválidos. JSON não foi salvo.")
+        except Exception as e:
+            print(f"Erro ao salvar os dados no arquivo JSON: {e}")
+
     def extrair_audiencias(self):
 
         audiencias = []
@@ -99,6 +122,8 @@ class Miner:
 
     def validar_json(self):
 
+        if not self.json_schema:
+            print('Erro: JSON Schema não carregado')
         try:
             validate(instance=self.dados_processo, schema=self.json_schema)
             return True
@@ -106,18 +131,31 @@ class Miner:
             print(f"Erro na validação do JSON: {e}")
             return False
 
-    def processar_dados(self):
+    def processar_dados(self, nome_arquivo="dados_TJAL.json"):
+        """
+        Processa os dados do HTML e salva em um arquivo JSON.
+        """
+        try:
+            self.dados_processo["numero_processo"] = self.extrair_dado("span", "numeroProcesso")
+            self.dados_processo["classe"] = self.extrair_dado("span", "classeProcesso")
+            self.dados_processo["assunto"] = self.extrair_dado("span", "assuntoProcesso")
+            self.dados_processo["foro"] = self.extrair_dado("span", "foroProcesso")
+            self.dados_processo["vara"] = self.extrair_dado("span", "varaProcesso")
+            self.dados_processo["juiz"] = self.extrair_dado("span", "juizProcesso")
+            self.dados_processo["partes"] = self.extrair_partes()
+            self.dados_processo["movimentacoes"] = self.extrair_movimentacoes()
+            self.dados_processo["peticoes"] = self.extrair_peticoes()
+            self.dados_processo["incidentes"] = self.extrair_tabela_simples(4, "incidente")
+            self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apenso")
+            self.dados_processo["audiencias"] = self.extrair_audiencias()
 
-        self.dados_processo["numero_processo"] = self.extrair_dado("span", "numeroProcesso")
-        self.dados_processo["classe"] = self.extrair_dado("span", "classeProcesso")
-        self.dados_processo["assunto"] = self.extrair_dado("span", "assuntoProcesso")
-        self.dados_processo["foro"] = self.extrair_dado("span", "foroProcesso")
-        self.dados_processo["vara"] = self.extrair_dado("span", "varaProcesso")
-        self.dados_processo["juiz"] = self.extrair_dado("span", "juizProcesso")
-        self.dados_processo["partes"] = self.extrair_partes()
-        self.dados_processo["movimentacoes"] = self.extrair_movimentacoes()
-        self.dados_processo["peticoes"] = self.extrair_peticoes()
-        self.dados_processo["incidentes"] = self.extrair_tabela_simples(4, "incidente")
-        self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apenso")
-        self.dados_processo["audiencias"] = self.extrair_audiencias()
-        return self.dados_processo
+            # Salvar os dados no arquivo JSON
+            print(self.dados_processo)
+            self.salvar_como_json(nome_arquivo)
+            return True
+        except Exception as e:
+            print(f"Erro ao processar os dados: {e}")
+            return False
+
+
+
