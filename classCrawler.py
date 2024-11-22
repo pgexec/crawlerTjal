@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import parse_qs,urlparse,unquote
+from urllib.parse import parse_qs,urlparse,quote,urlencode,unquote
 
 
 class Crawler:
@@ -12,7 +12,6 @@ class Crawler:
             "Accept-Encoding": "gzip, deflate, br, zstd",
             "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
             "Connection": "keep-alive",
-            "Cookie": "JSESSIONID=8A1DBEA85ED2543D2F4925939D599410.esajlayout3",  # Atualize o cookie conforme necessário
             "Host": "www2.tjal.jus.br",
             "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
             "Sec-Ch-Ua-Mobile": "?0",
@@ -24,44 +23,42 @@ class Crawler:
             "X-Requested-With": "XMLHttpRequest",
         }
 
+    def obter_cookies_iniciais(self):
+        """
+        Acessa a página inicial para capturar os cookies necessários.
+        """
+        url = f"{self.base_url}/cpopg/open.do"
+        response = self.session.get(url, headers=self.headers)
+        if response.status_code == 200:
+            print("Cookies capturados com sucesso.")
+        else:
+            print(f"Erro ao capturar cookies: {response.status_code}")
+
+    def extrair_foro(self, numero_processo):
+        """
+        Extrai o foro dos dois últimos dígitos do número do processo.
+        """
+        return numero_processo.split(".")[-1][:2]
+
     def enviar_requisicao(self, numero_processo):
         """
         Envia a requisição inicial e captura o valor do parâmetro 'retorno'.
         """
-        url = f"{self.base_url}/sajcas/conteudoIdentificacaoJson"
 
-        params = {
-            "script": "1732258966787",  # Exemplo de script
-            "retorno": f"{self.base_url}/cpopg/show.do",  # Padrão inicial (será sobrescrito)
-            "dadosConsulta.pesquisaNuUnificado": numero_processo,
-            "dadosConsulta.valorConsulta": numero_processo,
+        foro_numero = numero_processo.split(".")[-1][:4]
+
+        retorno_params = {
+            "conversationId": "",
             "cbPesquisa": "NUMPROC",
-            "tipoNuProcesso": "UNIFICADO",
+            "numeroDigitoAnoUnificado": numero_processo,
+            "foroNumeroUnificado": foro_numero,
+            "dadosConsulta.valorConsultaNuUnificado": "UNIFICADO",
+            "dadosConsulta.valorConsulta": numero_processo,
+            "dadosConsulta.tipoNuProcesso": "UNIFICADO",
         }
-
-        try:
-            # Enviar a requisição
-            response = self.session.get(url, headers=self.headers, params=params, allow_redirects=False)
-
-            if response.status_code == 200:
-                print("Requisição inicial realizada com sucesso.")
-                # Captura o valor do parâmetro `retorno` na URL
-                query_params = parse_qs(urlparse(response.url).query)
-                retorno_encoded = query_params.get("retorno", [None])[0]
-                if retorno_encoded:
-                    retorno_decoded = unquote(retorno_encoded)
-                    print(f"Valor do parâmetro 'retorno': {retorno_decoded}")
-                    return retorno_decoded
-                else:
-                    print("Parâmetro 'retorno' não encontrado na URL.")
-                    return None
-            else:
-                print(f"Erro ao realizar a requisição inicial: {response.status_code}")
-                return None
-        except Exception as e:
-            print(f"Erro ao enviar a requisição inicial: {e}")
-            return None
-
+        retorno_url = f"{self.base_url}/cpopg/search.do?{urlencode(retorno_params)}"
+        retorno_url_encoded = unquote(retorno_url)
+        print(retorno_url_encoded)
 
 
     def acessar_detalhes(self, url_processo):

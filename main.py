@@ -3,8 +3,9 @@ from classMiner import Miner
 
 def main():
 
-    numero_processo = input("Digite o número do processo (ex: 0731425-82.2014.8.02.0001): ").strip()
+    numero_processo = '0731425-82.2014.8.02.0001'
     crawler = Crawler()
+    crawler.obter_cookies_iniciais()
 
     print("Realizando consulta...")
     url_processo = crawler.enviar_requisicao(numero_processo)
@@ -15,7 +16,7 @@ def main():
 
     print("Acessando detalhes do processo...")
     detalhes_html = crawler.acessar_detalhes(url_processo)
-    print(detalhes_html.prettify())
+
 
     if detalhes_html:
         print("Página carregada com sucesso. Processando...")
