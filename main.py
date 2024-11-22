@@ -5,7 +5,10 @@ def main():
 
     numero_processo = '0731425-82.2014.8.02.0001'
     crawler = Crawler()
-    crawler.obter_cookies_iniciais()
+    try:
+        crawler.obter_cookies_iniciais()
+    except Exception as e:
+        print(f'Erro ao obter cookies iniciais:{e}')
 
     print("Realizando consulta...")
     url_processo = crawler.enviar_requisicao(numero_processo)

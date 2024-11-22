@@ -42,13 +42,12 @@ class Crawler:
 
     def enviar_requisicao(self, numero_processo):
         """
-        Envia a requisição inicial e captura o valor do parâmetro 'retorno'.
+        Envia a consulta para o sistema e lida com redirecionamentos.
         """
+        foro_numero = self.extrair_foro(numero_processo)
 
-        foro_numero = numero_processo.split(".")[-1][:4]
-
-        retorno_params = {
-            "conversationId": "",
+        query_params = {
+            "conversationId": "",  # Se vazio funciona
             "cbPesquisa": "NUMPROC",
             "numeroDigitoAnoUnificado": numero_processo,
             "foroNumeroUnificado": foro_numero,
@@ -56,9 +55,33 @@ class Crawler:
             "dadosConsulta.valorConsulta": numero_processo,
             "dadosConsulta.tipoNuProcesso": "UNIFICADO",
         }
-        retorno_url = f"{self.base_url}/cpopg/search.do?{urlencode(retorno_params)}"
-        retorno_url_encoded = unquote(retorno_url)
-        print(retorno_url_encoded)
+
+        # Montar URL de busca
+        url = f"{self.base_url}/cpopg/search.do?{urlencode(query_params)}"
+        print(f"URL gerada: {url}")
+
+        # Enviar requisição
+        response = self.session.get(url, headers=self.headers, allow_redirects=True)  # Não segue redirecionamento
+        if response.status_code == 302:
+
+            # Capturar o redirecionamento
+            redirect_url = response.headers.get("Location")
+            print(f"Redirecionado para: {redirect_url}")
+
+            # Seguir manualmente o redirecionamento, se necessário
+            response = self.session.get(redirect_url, headers=self.headers)
+            if response.status_code == 200:
+                print("Detalhes capturados com sucesso!")
+                return response.content
+            else:
+                print(f"Erro ao acessar a URL redirecionada: {response.status_code}")
+                return None
+        elif response.status_code == 200:
+            print("Requisição bem-sucedida!")
+            return response.text
+        else:
+            print(f"Erro na requisição: {response.status_code}")
+            return None
 
 
     def acessar_detalhes(self, url_processo):
