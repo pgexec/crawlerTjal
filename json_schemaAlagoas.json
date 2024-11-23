@@ -8,6 +8,11 @@
         "foro": {"type": "string"},
         "vara": {"type": "string"},
         "juiz": {"type": "string"},
+        "distribuicao": {"type": "string"},
+        "controle": {"type": "string"},
+        "area": {"type": "string"},
+        "valor_acao": {"type": "string"},
+        "outros_assuntos": {"type": "string"},
         "partes": {
             "type": "object",
             "properties": {
