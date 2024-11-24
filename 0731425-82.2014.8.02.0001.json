@@ -5,6 +5,10 @@
     "foro": "Foro de Maceió",
     "vara": "3ª Vara Cível da Capital",
     "juiz": "Henrique Gomes de Barros Teixeira",
+    "distribuicao": "09/03/2016 às 14:40 - Prevenção",
+    "controle": "2016/000222",
+    "area": "Cível",
+    "valor_acao": "R$         15.000,00",
     "partes": {
         "autor": [
             {
@@ -97,5 +101,6 @@
             "situacao": "Realizada",
             "qtPessoas": "2"
         }
-    ]
+    ],
+    "outros_assuntos": "Procedimento Comum Cível"
 }

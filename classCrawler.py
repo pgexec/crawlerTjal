@@ -28,9 +28,7 @@ class Crawler:
 
 
     def obter_cookies_iniciais(self):
-        """
-        Acessa a página inicial para capturar os cookies necessários.
-        """
+
         url = f"{self.base_url}/cpopg/open.do"
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 200:
@@ -38,10 +36,30 @@ class Crawler:
         else:
             print(f"Erro ao capturar cookies: {response.status_code}")
 
+    def construir_url(self, numero_processo):
+        """
+        Constrói uma URL dinâmica para a requisição.
+        """
+        params = MultiDict([
+            ("conversationId", ""),
+            ("cbPesquisa", "NUMPROC"),
+            ("numeroDigitoAnoUnificado", numero_processo[:15]),
+            ("foroNumeroUnificado", numero_processo[-4:]),
+            ("dadosConsulta.valorConsultaNuUnificado", numero_processo),
+            ("dadosConsulta.valorConsultaNuUnificado", "UNIFICADO"),
+            ("dadosConsulta.valorConsulta", ""),
+            ("dadosConsulta.tipoNuProcesso", "UNIFICADO"),
+        ])
+
+        query_string = urlencode(params, doseq=True)
+        url = f"{self.base_url}cpopg/search.do?{query_string}"
+        return url
+
+
     def enviar_requisicao(self, numero_processo):
 
 
-        url = f"{self.base_url}cpopg/search.do?conversationId=&cbPesquisa=NUMPROC&numeroDigitoAnoUnificado={numero_processo[:15]}&foroNumeroUnificado={numero_processo[-4:]}&dadosConsulta.valorConsultaNuUnificado={numero_processo}&dadosConsulta.valorConsultaNuUnificado=UNIFICADO&dadosConsulta.valorConsulta=&dadosConsulta.tipoNuProcesso=UNIFICADO"
+        url = self.construir_url(numero_processo)
         print(f"URL gerada: {url}")
 
         response = self.session.get(url, headers=self.headers, allow_redirects=False)

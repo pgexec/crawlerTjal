@@ -1,5 +1,5 @@
 import re
-from cgi import print_form
+
 
 from jsonschema import validate, ValidationError
 import json
@@ -8,16 +8,15 @@ class Miner:
     def __init__(self, site, json_schema_path):
 
         self.site = site
-        self.json_schema = json_schema_path
         self.dados_processo = {}
-
         try:
             with open(json_schema_path,"r",encoding="utf-8") as schema_file:
                 self.json_schema = json.load(schema_file)
         except Exception as e:
+            self.json_schema = None
             print(f"Erro ao carregar o JSON Schema:{e}")
 
-    def extrair_dado(self, elemento, id):
+    def extrair_dado(self, elemento,id):
         dado = self.site.find(elemento, attrs={"id": id})
         if not dado:
             print(f"Elemento {id} não encontrado no HTML.")  # Depuração
@@ -44,9 +43,9 @@ class Miner:
     def extrair_movimentacoes(self):
 
         movimentacoes = []
-        tblMovimentacoes = self.site.find('tbody', attrs={'id': 'tabelaUltimasMovimentacoes'})
-        if tblMovimentacoes:
-            linhas = tblMovimentacoes.find_all("tr")
+        tblmovimentacoes = self.site.find('tbody', attrs={'id': 'tabelaUltimasMovimentacoes'})
+        if tblmovimentacoes:
+            linhas = tblmovimentacoes.find_all("tr")
             for linha in linhas:
                 data = linha.find('td', attrs={'class': 'dataMovimentacao'})
                 movimento_elemento = linha.find('td', attrs={'class': 'descricaoMovimentacao'})
@@ -62,9 +61,9 @@ class Miner:
     def extrair_peticoes(self):
 
         peticoes = []
-        AllTbody = self.site.findAll('tbody')
-        if len(AllTbody) > 2:
-            linhas = AllTbody[2].findAll('tr')
+        alltbody = self.site.findAll('tbody')
+        if len(alltbody) > 2:
+            linhas = alltbody[2].findAll('tr')
             for linha in linhas:
                 colunas = linha.findAll('td')
                 if len(colunas) >= 2:
@@ -76,9 +75,9 @@ class Miner:
     def extrair_tabela_simples(self, index, label):
 
         try:
-            AllTabelas = self.site.findAll('table')
-            if len(AllTabelas) > index:
-                dado = re.sub(r'\s+', ' ', AllTabelas[index].text.strip())
+            alltabelas = self.site.findAll('table')
+            if len(alltabelas) > index:
+                dado = re.sub(r'\s+', ' ', alltabelas[index].text.strip())
                 return [{label: dado}]
         except Exception as e:
             print(f"Erro ao processar {label}: {e}")
@@ -101,9 +100,9 @@ class Miner:
 
         audiencias = []
         try:
-            AllTabelas = self.site.findAll('table')
-            if len(AllTabelas) > 6:
-                linhas = AllTabelas[6].findAll('tr')
+            alltabelas = self.site.findAll('table')
+            if len(alltabelas) > 6:
+                linhas = alltabelas[6].findAll('tr')
                 for linha in linhas[1:]:
                     colunas = linha.findAll('td')
                     if len(colunas) >= 4:
@@ -140,17 +139,18 @@ class Miner:
             self.dados_processo["foro"] = self.extrair_dado("span", "foroProcesso")
             self.dados_processo["vara"] = self.extrair_dado("span", "varaProcesso")
             self.dados_processo["juiz"] = self.extrair_dado("span", "juizProcesso")
-            self.dados_processo["distribuicao"] = self.extrair_dado("span","dataHoraDistribuicaoProcesso")
-            self.dados_processo["controle"] = self.extrair_dado("span","numeroControleProcesso")
-            self.dados_processo["area"] = self.extrair_dado("span","areaProcesso")
-            self.dados_processo["valor_acao"] = self.extrair_dado("span", "valorAcaoProcesso")
-            self.dados_processo["outros_assuntos"] = self.site.find('class',attrs={'class':'line-clamp__2  '})
+            self.dados_processo["distribuicao"] = self.extrair_dado("div","dataHoraDistribuicaoProcesso")
+            self.dados_processo["controle"] = self.extrair_dado("div","numeroControleProcesso")
+            self.dados_processo["area"] = self.extrair_dado("div","areaProcesso")
+            self.dados_processo["valor_acao"] = self.extrair_dado("div", "valorAcaoProcesso")
             self.dados_processo["partes"] = self.extrair_partes()
             self.dados_processo["movimentacoes"] = self.extrair_movimentacoes()
             self.dados_processo["peticoes"] = self.extrair_peticoes()
             self.dados_processo["incidentes"] = self.extrair_tabela_simples(4, "incidente")
             self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apensos")
             self.dados_processo["audiencias"] = self.extrair_audiencias()
+            outros_assuntos_elem = self.site.find('div', attrs={'class': 'line-clamp__2'})
+            self.dados_processo["outros_assuntos"] = (' '.join(outros_assuntos_elem.text.split()).strip() if outros_assuntos_elem else "Não informado")
 
             # Salvar os dados no arquivo JSON
             print(self.dados_processo)
