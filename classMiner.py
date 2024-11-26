@@ -29,19 +29,19 @@ class Miner:
     def extrair_partes(self):
         partes = {"autor": [], "reu": [], "Testemunha": []}  # Conformidade com o JSON Schema
 
-        # Encontra todos os <tr> com a classe "fundoClaro"
+
         linhas = self.site.find_all("tr", class_="fundoClaro")
         for linha in linhas:
-            # Encontra o <span> com a classe "mensagemExibindo tipoDeParticipacao"
+
             tipo_participacao_elem = linha.find("span", class_="mensagemExibindo tipoDeParticipacao")
-            # Encontra o nome associado na célula seguinte
+
             nome_elem = linha.find("td", class_="nomeParteEAdvogado")
 
             if tipo_participacao_elem and nome_elem:
-                # Extrai e limpa o tipo de participação
+
                 tipo_participacao = re.sub(r'\s+', ' ', tipo_participacao_elem.text.strip()).lower()
 
-                # Mapeia para as chaves corretas do esquema JSON
+
                 if tipo_participacao in ["autora", "autor"]:
                     tipo_chave = "autor"
                 elif tipo_participacao in ["réu", "reu"]:
@@ -49,9 +49,9 @@ class Miner:
                 elif tipo_participacao == "testemunha":
                     tipo_chave = "Testemunha"
                 else:
-                    continue  # Ignora tipos de participação desconhecidos
+                    continue
 
-                # Extrai e limpa o nome
+
                 nome = re.sub(r'\s+', ' ', nome_elem.text.strip())  # Remove múltiplos espaços
                 nome = re.sub(r'(Defensor|Advogado|Advogada):?\s*', '', nome)  # Remove prefixos irrelevantes
 
@@ -59,7 +59,6 @@ class Miner:
                 if not any(p["nome"] == nome for p in partes[tipo_chave]):
                     partes[tipo_chave].append({"nome": nome})
 
-        # Remove chaves vazias
         partes = {k: v for k, v in partes.items() if v}
 
         return partes
