@@ -16,6 +16,17 @@ class Miner:
             self.json_schema = None
             print(f"Erro ao carregar o JSON Schema:{e}")
 
+    def havest(self):
+        try:
+            if self.processar_dados('dados_TJAL.json'):
+                print(f"Dados salvos com sucesso no arquivo dados_TJAL.json.")
+                return True
+            else:
+                print(f"Erro ao processar e salvar os dados no arquivo dados_TJAL.json.")
+                return False
+        except Exception as e:
+            print(f"Erro ao executar a função havest: {e}")
+            return False
 
 
 

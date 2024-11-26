@@ -4,12 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import parse_qs,urlparse,urlencode
 from multidict import MultiDict
-
+import re
 
 class Crawler:
-    def __init__(self):
+    def __init__(self,numero_processo):
+        self.numero_processo = numero_processo
         self.session = requests.Session()
         self.base_url = "https://www2.tjal.jus.br"
+        self.url_processo = ""
         self.headers = {
              "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -26,6 +28,30 @@ class Crawler:
             "X-Requested-With": "XMLHttpRequest",
         }
 
+    def havest(self):
+
+        if not self.validar_numero_processo():
+            print(f"Erro: Número do processo '{self.numero_processo}' inválido.")
+            return None
+        try:
+            if not self.obter_cookies_iniciais():
+                print('Erro ao capturar cookies, Interropendo o processo')
+                return None
+            self.url_processo = self.enviar_requisicao()
+            print(self.url_processo)
+            if self.url_processo:
+                html = self.acessar_detalhes()
+                return html
+            else:
+                print("Erro ao obter a URL do processo.")
+                return None
+        except Exception as e:
+            print(f"Erro no processo de coleta: {e}")
+            return None
+
+    def validar_numero_processo(self):
+        padrao = r'^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$'
+        return re.match(padrao, self.numero_processo) is not None
 
     def obter_cookies_iniciais(self):
 
@@ -33,14 +59,14 @@ class Crawler:
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 200:
             print("Cookies capturados com sucesso.")
+            return True
         else:
             print(f"Erro ao capturar cookies: {response.status_code}")
+            return None
 
 
     def construir_url(self, numero_processo):
-        """
-        Constrói uma URL dinâmica para a requisição.
-        """
+
         params = MultiDict([
             ("conversationId", ""),
             ("cbPesquisa", "NUMPROC"),
@@ -57,15 +83,18 @@ class Crawler:
         return url
 
 
-    def enviar_requisicao(self, numero_processo):
+    def enviar_requisicao(self):
 
 
-        url = self.construir_url(numero_processo)
+        url = self.construir_url(self.numero_processo)
+        if not url:
+            print("Erro: A URL não pôde ser construída. Interrompendo a requisição.")
+            return None
 
         response = self.session.get(url, headers=self.headers, allow_redirects=False)
         if response.status_code == 302:
 
-            redirect_url = f"{self.base_url}{response.headers.get("Location")}"
+            redirect_url = f"{self.base_url}{response.headers.get('Location')}"
             print(f"Redirecionado para: {redirect_url}")
 
             if redirect_url:
@@ -81,13 +110,13 @@ class Crawler:
             print(f"Erro na requisição: {response.status_code}")
             return None
 
-    def acessar_detalhes(self, url_processo):
+    def acessar_detalhes(self):
 
         headers = self.headers.copy()
-        headers["Referer"] = url_processo
+        headers["Referer"] = self.url_processo
 
         try:
-            response = self.session.get(url_processo, headers=headers)
+            response = self.session.get(self.url_processo, headers=headers)
             if response.status_code == 200:
                 print("Detalhes do processo acessados com sucesso!")
                 soup = BeautifulSoup(response.content, 'html.parser')
