@@ -1,8 +1,7 @@
-from ast import parse
 
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import parse_qs,urlparse,urlencode
+from urllib.parse import urlencode
 from multidict import MultiDict
 import re
 
