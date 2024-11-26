@@ -1,6 +1,4 @@
 import re
-
-
 from jsonschema import validate, ValidationError
 import json
 
@@ -69,7 +67,7 @@ class Miner:
 
         return partes
 
-    import re
+
 
     def extrair_movimentacoes(self):
 
@@ -137,27 +135,41 @@ class Miner:
             print(f"Erro ao salvar os dados no arquivo JSON: {e}")
 
     def extrair_audiencias(self):
-
         audiencias = []
         try:
-            alltabelas = self.site.findAll('table')
-            if len(alltabelas) > 6:
-                linhas = alltabelas[6].findAll('tr')
-                for linha in linhas[1:]:
-                    colunas = linha.findAll('td')
-                    if len(colunas) >= 4:
-                        data = colunas[0].text.strip()
-                        audiencia = colunas[1].text.strip()
-                        situacao = colunas[2].text.strip()
-                        qt_pessoas = colunas[3].text.strip()
-                        audiencias.append({
-                            "data": data,
-                            "audiencia": audiencia,
-                            "situacao": situacao,
-                            "qtPessoas": qt_pessoas
-                        })
+            # Encontra todas as tabelas no site
+            tabelas = self.site.find_all('table')
+
+            # Itera pelas tabelas para encontrar aquela que contém "Audiências"
+            for tabela in tabelas:
+                # Verifica se a tabela contém o cabeçalho de "Audiências"
+                cabecalhos = tabela.find_all('th')
+                if cabecalhos and any("Audiência" in th.text for th in cabecalhos):
+
+                    linhas = tabela.find_all('tr')[1:]  # Pula a primeira linha (cabeçalho)
+
+                    # Processa as linhas da tabela
+                    for linha in linhas:
+                        colunas = linha.find_all('td')
+                        if len(colunas) >= 4:
+                            data = colunas[0].text.strip()
+                            audiencia = colunas[1].text.strip()
+                            situacao = colunas[2].text.strip()
+                            qt_pessoas = colunas[3].text.strip()
+
+                            # Adiciona a audiência à lista
+                            audiencias.append({
+                                "data": data,
+                                "audiencia": audiencia,
+                                "situacao": situacao,
+                                "qtPessoas": qt_pessoas
+                            })
+
+                    # Saí do loop após encontrar e processar a tabela de audiências
+                    break
         except Exception as e:
             print(f"Erro ao processar audiências: {e}")
+
         return audiencias
 
 
