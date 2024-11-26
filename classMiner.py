@@ -137,16 +137,16 @@ class Miner:
     def extrair_audiencias(self):
         audiencias = []
         try:
-            # Encontra todas as tabelas no site
+
             tabelas = self.site.find_all('table')
 
-            # Itera pelas tabelas para encontrar aquela que contém "Audiências"
+
             for tabela in tabelas:
                 # Verifica se a tabela contém o cabeçalho de "Audiências"
                 cabecalhos = tabela.find_all('th')
                 if cabecalhos and any("Audiência" in th.text for th in cabecalhos):
 
-                    linhas = tabela.find_all('tr')[1:]  # Pula a primeira linha (cabeçalho)
+                    linhas = tabela.find_all('tr')[1:]
 
                     # Processa as linhas da tabela
                     for linha in linhas:
@@ -157,15 +157,13 @@ class Miner:
                             situacao = colunas[2].text.strip()
                             qt_pessoas = colunas[3].text.strip()
 
-                            # Adiciona a audiência à lista
+
                             audiencias.append({
                                 "data": data,
                                 "audiencia": audiencia,
                                 "situacao": situacao,
                                 "qtPessoas": qt_pessoas
                             })
-
-                    # Saí do loop após encontrar e processar a tabela de audiências
                     break
         except Exception as e:
             print(f"Erro ao processar audiências: {e}")
