@@ -5,6 +5,8 @@ from jsonschema import validate, ValidationError
 import json
 
 class Miner:
+
+
     def __init__(self, site, json_schema_path):
 
         self.site = site
@@ -17,6 +19,8 @@ class Miner:
             print(f"Erro ao carregar o JSON Schema:{e}")
 
 
+
+
     def extrair_dado(self, elemento,id):
         dado = self.site.find(elemento, attrs={"id": id})
         if not dado:
@@ -25,6 +29,9 @@ class Miner:
             print(f"Elemento {id} encontrado: {dado}")
 
         return re.sub(r'\s+', ' ', dado.text).strip() if dado else None
+
+
+
 
     def extrair_partes(self):
         partes = {"autor": [], "reu": [], "Testemunha": []}  # Conformidade com o JSON Schema
@@ -51,7 +58,6 @@ class Miner:
                 else:
                     continue
 
-
                 nome = re.sub(r'\s+', ' ', nome_elem.text.strip())  # Remove múltiplos espaços
                 nome = re.sub(r'(Defensor|Advogado|Advogada):?\s*', '', nome)  # Remove prefixos irrelevantes
 
@@ -63,21 +69,28 @@ class Miner:
 
         return partes
 
+    import re
+
     def extrair_movimentacoes(self):
 
         movimentacoes = []
-        tblmovimentacoes = self.site.find('tbody', attrs={'id': 'tabelaUltimasMovimentacoes'})
-        if tblmovimentacoes:
-            linhas = tblmovimentacoes.find_all("tr")
+        tabela_movimentacoes = self.site.find('tbody', attrs={'id': 'tabelaUltimasMovimentacoes'})
+        if tabela_movimentacoes:
+
+            linhas = tabela_movimentacoes.find_all("tr")
             for linha in linhas:
-                data = linha.find('td', attrs={'class': 'dataMovimentacao'})
-                movimento_elemento = linha.find('td', attrs={'class': 'descricaoMovimentacao'})
-                if data and movimento_elemento:
-                    data_texto = data.text.strip()
-                    movimento_texto = re.sub(r'\s+', ' ', movimento_elemento.text.strip())
+
+                data_elem = linha.find('td', class_='dataMovimentacao')
+                descricao_elem = linha.find('td', class_='descricaoMovimentacao')
+
+
+                if data_elem and descricao_elem:
+                    data = data_elem.text.strip()
+                    descricao = re.sub(r'\s+', ' ', descricao_elem.text.strip())  # Remove múltiplos espaços
+
                     movimentacoes.append({
-                        "data": data_texto,
-                        "movimento": movimento_texto
+                        "data": data,
+                        "movimento": descricao
                     })
         return movimentacoes
 
@@ -95,6 +108,8 @@ class Miner:
                     peticoes.append({"data": data_texto, "tipo": tipo_texto})
         return peticoes
 
+
+
     def extrair_tabela_simples(self, index, label):
 
         try:
@@ -105,6 +120,8 @@ class Miner:
         except Exception as e:
             print(f"Erro ao processar {label}: {e}")
         return []
+
+
 
     def salvar_como_json(self, nome_arquivo="dados_processo.json"):
 
@@ -142,6 +159,7 @@ class Miner:
         except Exception as e:
             print(f"Erro ao processar audiências: {e}")
         return audiencias
+
 
     def validar_json(self):
 
