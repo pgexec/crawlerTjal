@@ -16,13 +16,15 @@ class Miner:
             self.json_schema = None
             print(f"Erro ao carregar o JSON Schema:{e}")
 
+
     def extrair_dado(self, elemento,id):
         dado = self.site.find(elemento, attrs={"id": id})
         if not dado:
-            print(f"Elemento {id} não encontrado no HTML.")  # Depuração
+            print(f"Elemento {id} não encontrado no HTML.")
         else:
-            print(f"Elemento {id} encontrado: {dado}")  # Depuração
-        return dado.text.strip() if dado else None
+            print(f"Elemento {id} encontrado: {dado}")
+
+        return re.sub(r'\s+', ' ', dado.text).strip() if dado else None
 
     def extrair_partes(self):
 
@@ -139,7 +141,12 @@ class Miner:
             self.dados_processo["foro"] = self.extrair_dado("span", "foroProcesso")
             self.dados_processo["vara"] = self.extrair_dado("span", "varaProcesso")
             self.dados_processo["juiz"] = self.extrair_dado("span", "juizProcesso")
-            self.dados_processo["distribuicao"] = self.extrair_dado("div","dataHoraDistribuicaoProcesso")
+
+
+            distribuicao_completa = self.extrair_dado("div", "dataHoraDistribuicaoProcesso")
+            data_match = re.search(r"\d{2}/\d{2}/\d{4}", distribuicao_completa)
+            self.dados_processo["distribuicao"] = data_match.group(0)
+
             self.dados_processo["controle"] = self.extrair_dado("div","numeroControleProcesso")
             self.dados_processo["area"] = self.extrair_dado("div","areaProcesso")
             self.dados_processo["valor_acao"] = self.extrair_dado("div", "valorAcaoProcesso")
@@ -150,8 +157,9 @@ class Miner:
             self.dados_processo["Apensos"] = self.extrair_tabela_simples(5, "apensos")
             self.dados_processo["audiencias"] = self.extrair_audiencias()
             outros_assuntos_elem = self.site.find('div', attrs={'class': 'line-clamp__2'})
-            self.dados_processo["outros_assuntos"] = (' '.join(outros_assuntos_elem.text.split()).strip() if outros_assuntos_elem else "Não informado")
-
+            self.dados_processo["outros_assuntos"] = (
+                re.sub(r'\s+', ' ', outros_assuntos_elem.text).strip() if outros_assuntos_elem else "Não informado"
+            )
             # Salvar os dados no arquivo JSON
             print(self.dados_processo)
             self.salvar_como_json(nome_arquivo)

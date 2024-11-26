@@ -9,7 +9,7 @@ from multidict import MultiDict
 class Crawler:
     def __init__(self):
         self.session = requests.Session()
-        self.base_url = "https://www2.tjal.jus.br/"
+        self.base_url = "https://www2.tjal.jus.br"
         self.headers = {
              "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -36,6 +36,7 @@ class Crawler:
         else:
             print(f"Erro ao capturar cookies: {response.status_code}")
 
+
     def construir_url(self, numero_processo):
         """
         Constrói uma URL dinâmica para a requisição.
@@ -52,7 +53,7 @@ class Crawler:
         ])
 
         query_string = urlencode(params, doseq=True)
-        url = f"{self.base_url}cpopg/search.do?{query_string}"
+        url = f"{self.base_url}/cpopg/search.do?{query_string}"
         return url
 
 
@@ -60,15 +61,12 @@ class Crawler:
 
 
         url = self.construir_url(numero_processo)
-        print(f"URL gerada: {url}")
 
         response = self.session.get(url, headers=self.headers, allow_redirects=False)
         if response.status_code == 302:
 
             redirect_url = f"{self.base_url}{response.headers.get("Location")}"
             print(f"Redirecionado para: {redirect_url}")
-
-
 
             if redirect_url:
                 print("Detalhes capturados com sucesso!")
