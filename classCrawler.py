@@ -49,6 +49,7 @@ class Crawler:
             return None
 
     def validar_numero_processo(self):
+
         padrao = r'^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$'
         return re.match(padrao, self.numero_processo) is not None
 
@@ -84,7 +85,6 @@ class Crawler:
 
     def enviar_requisicao(self):
 
-
         url = self.construir_url(self.numero_processo)
         if not url:
             print("Erro: A URL não pôde ser construída. Interrompendo a requisição.")
@@ -94,7 +94,6 @@ class Crawler:
         if response.status_code == 302:
 
             redirect_url = f"{self.base_url}{response.headers.get('Location')}"
-            print(f"Redirecionado para: {redirect_url}")
 
             if redirect_url:
                 print("Detalhes capturados com sucesso!")

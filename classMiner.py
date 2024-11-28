@@ -16,9 +16,10 @@ class Miner:
             self.json_schema = None
             print(f"Erro ao carregar o JSON Schema:{e}")
 
+
     def havest(self):
         try:
-            if self.processar_dados('dados_TJAL.json'):
+            if self.processar_dados():
                 print(f"Dados salvos com sucesso no arquivo dados_TJAL.json.")
                 return True
             else:
@@ -30,14 +31,13 @@ class Miner:
 
 
 
+
     def extrair_dado(self, elemento,id):
         dado = self.site.find(elemento, attrs={"id": id})
         if not dado:
             print(f"Elemento {id} não encontrado no HTML.")
         else:
-            print(f"Elemento {id} encontrado: {dado}")
-
-        return re.sub(r'\s+', ' ', dado.text).strip() if dado else None
+            return re.sub(r'\s+', ' ', dado.text).strip() if dado else None
 
 
 
@@ -75,8 +75,8 @@ class Miner:
                     partes[tipo_chave].append({"nome": nome})
 
         partes = {k: v for k, v in partes.items() if v}
-
         return partes
+
 
 
 
@@ -91,8 +91,6 @@ class Miner:
 
                 data_elem = linha.find('td', class_='dataMovimentacao')
                 descricao_elem = linha.find('td', class_='descricaoMovimentacao')
-
-
                 if data_elem and descricao_elem:
                     data = data_elem.text.strip()
                     descricao = re.sub(r'\s+', ' ', descricao_elem.text.strip())  # Remove múltiplos espaços
@@ -102,6 +100,7 @@ class Miner:
                         "movimento": descricao
                     })
         return movimentacoes
+
 
     def extrair_peticoes(self):
 
@@ -134,7 +133,6 @@ class Miner:
 
     def salvar_como_json(self, nome_arquivo="dados_processo.json"):
 
-        #Salva os dados processados em um arquivo JSON.
         try:
             if self.validar_json():
                 with open(nome_arquivo, "w", encoding="utf-8") as arquivo:
@@ -148,18 +146,13 @@ class Miner:
     def extrair_audiencias(self):
         audiencias = []
         try:
-
             tabelas = self.site.find_all('table')
-
-
             for tabela in tabelas:
-                # Verifica se a tabela contém o cabeçalho de "Audiências"
+
                 cabecalhos = tabela.find_all('th')
                 if cabecalhos and any("Audiência" in th.text for th in cabecalhos):
 
                     linhas = tabela.find_all('tr')[1:]
-
-                    # Processa as linhas da tabela
                     for linha in linhas:
                         colunas = linha.find_all('td')
                         if len(colunas) >= 4:
@@ -170,7 +163,7 @@ class Miner:
 
 
                             audiencias.append({
-                                "data": data,
+                                "data": data,  
                                 "audiencia": audiencia,
                                 "situacao": situacao,
                                 "qtPessoas": qt_pessoas
@@ -193,8 +186,9 @@ class Miner:
             print(f"Erro na validação do JSON: {e}")
             return False
 
-    def processar_dados(self, nome_arquivo="dados_TJAL.json"):
+    def processar_dados(self):
         try:
+
             self.dados_processo["numero_processo"] = self.extrair_dado("span", "numeroProcesso")
             self.dados_processo["classe"] = self.extrair_dado("span", "classeProcesso")
             self.dados_processo["assunto"] = self.extrair_dado("span", "assuntoProcesso")
@@ -220,9 +214,13 @@ class Miner:
             self.dados_processo["outros_assuntos"] = (
                 re.sub(r'\s+', ' ', outros_assuntos_elem.text).strip() if outros_assuntos_elem else "Não informado"
             )
-            # Salvar os dados no arquivo JSON
-            print(self.dados_processo)
-            self.salvar_como_json(nome_arquivo)
+
+            nome_arquivo = f"dados_TJAL-{self.dados_processo['numero_processo']}.json"
+
+            if nome_arquivo:
+                self.salvar_como_json(nome_arquivo)
+            else:
+                print("merda")
             return True
         except Exception as e:
             print(f"Erro ao processar os dados: {e}")
